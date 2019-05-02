@@ -1,0 +1,21 @@
+{
+  "name": "boldom",
+  "version": "1.0.0",
+  "description": "Scoped html lib (Bold idea)",
+  "main": "src/boldom.js",
+  "scripts": {
+    "examples:conditional": "cd ./examples/conditional && node index.js",
+    "examples:counter": "cd ./examples/counter && node index.js",
+    "examples:color": "cd ./examples/color && node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Marcisbee/boldom.git"
+  },
+  "author": "Marcis <Marcisbee> Bergmanis",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/Marcisbee/boldom/issues"
+  },
+  "homepage": "https://github.com/Marcisbee/boldom#readme"
+}
