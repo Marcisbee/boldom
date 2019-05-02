@@ -74,10 +74,12 @@ This is what counter component looks like. Think of it as a HTML parsed as [Temp
 
 One thing might not be clear is how view gets updated here. You see boldom makes use of `window` scope. Every variable defined in `script` tag is added to window scope by default (browser it self does it). That is how we can access variables and functions in HTML (no `this`, `self` etc.). Only thing done by Boldom is that in every function defined in components root scope, it injects another function call that updates view. And that's the whole framework idea right there.
 
-Ok so we've seen how component looks, but how the hell we can use it ? We just need to inject that component in dom using `link`:
+Ok so we've seen how component looks, but how the hell we can use it ? We just need to inject that component in dom using `link` (it must be defined inside `body`):
 
 ```html
-<link href="./count.html" />
+<body>
+  <link href="./count.html" />
+</body>
 ```
 
 See [examples section](/examples) for more demos.
