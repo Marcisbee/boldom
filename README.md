@@ -1,4 +1,4 @@
-# <img src='./assets/logo.png' height='90' alt='Boldom' />
+# <img src='./assets/logo.png' height='60' alt='Boldom' />
 
 **Boldom** is a 1kb JS/HTML framework.
 
