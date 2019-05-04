@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <style>
+    @import 'https://unpkg.com/chipolette@latest/dist/chipolette.css';
+    :root {
+      --body-bg-color: #1d1d1d;
+      --body-color: #fff;
+    }
+    #editor {
+      position: absolute;
+      left: 0;
+      top: 36px;
+      width: 60%;
+      height: calc(100% - 36px);
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #content {
+      position: absolute;
+      right: 0;
+      top: 36px;
+      width: 40%;
+      height: calc(100% - 36px);
+      margin: 0;
+      padding: 20px;
+      overflow: hidden;
+      background-color: #f0f0f0;
+      color: #333;
+      text-align: center;
+    }
+    #errors {
+      position: absolute;
+      right: 0;
+      top: 36px;
+      width: 40%;
+      height: calc(100% - 36px);
+      margin: 0;
+      padding: 20px;
+      overflow: hidden;
+      background-color: #f9e7e3;
+      color: #5d443f;
+      text-align: left;
+      z-index: 2;
+      font-size: 12px;
+      border-radius: 0 0 7px 0;
+      overflow: visible;
+    }
+    #errors:empty {
+      display: none;
+    }
+    #errors:before {
+      display: block;
+      position: absolute;
+      text-align: center;
+      content: 'Error';
+      left: 0;
+      top: -36px;
+      height: 36px;
+      width: 100%;
+      background-color: #eaa696;
+      color: #904620;
+      line-height: 36px;
+      font-size: 14px;
+    }
+    #errors h4 {
+      font-weight: bold;
+      color: #904522;
+      margin-bottom: 1rem;
+    }
+    .editor-header {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 60%;
+      height: 36px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #272727;
+    }
+    .content-header {
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 40%;
+      height: 36px;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      background-color: #e6e6e6;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div style="overflow: hidden;">
+    <div class="editor-header"></div>
+    <div id="editor"></div>
+
+    <div class="content-header"></div>
+    <div id="content">
+      <link id="thelink" href="app.html" />
+    </div>
+    <div id="errors"></div>
+  </div>
+
+  <script src="https://unpkg.com/monaco-editor@0.8.3/min/vs/loader.js"></script>
+  <script src="https://unpkg.com/style-scoped@0.1.0/scoped.min.js"></script>
+  <script src="../src/boldom.js"></script>
+  <script>
+    (function() {
+      const source = `\<script\>
+  var count = 0;
+
+  function increment() {
+    count += 1;
+  }
+
+  function decrement() {
+    count -= 1;
+  }
+\</script\>
+
+\<style\>
+  h1 {
+    font-size: \${count+4}rem;
+  }
+\</style\>
+
+\<h1\>\${count}\</h1\>
+
+\<button onclick="decrement()" \${count <=0 && 'disabled' }\>-\</button\>
+\<button onclick="increment()"\>+\</button\>
+`;
+
+      Boldom.disableCache('scripts');
+      Boldom.errorHandler = (err) => {
+        if (err) {
+          console.log(err, err.message)
+          errors.innerHTML = '<h4>Error:</h4>' + err;
+        } else {
+          errors.innerHTML = '';
+        }
+      };
+      Boldom.preload(location.href.replace('repl.html', 'app.html'), source);
+
+      require.config({ paths: { 'vs': 'https://unpkg.com/monaco-editor@0.8.3/min/vs' } });
+
+      require(["vs/editor/editor.main"], function () {
+        let editor = monaco.editor.create(document.getElementById('editor'), {
+          value: source,
+          language: 'html',
+          theme: 'vs-dark'
+        });
+
+        editor.model.onDidChangeContent(() => {
+          Boldom.preload(location.href.replace('repl.html', 'app.html'), editor.getValue());
+          thelink.tagged = false;
+          Boldom.scan();
+        });
+      });
+    })()
+  </script>
+
+</body>
+</html>

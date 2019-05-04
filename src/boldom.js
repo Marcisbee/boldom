@@ -1,6 +1,10 @@
 (function () {
   const PAGES = {};
   const SCRIPTS = [];
+  const USE_CACHE = {
+    scripts: true,
+    links: true,
+  };
   let LINKS = [];
 
   function createEl(name) {
@@ -45,18 +49,28 @@
         // Handle <script>
         if (js) {
           let script;
-          const cachedScript = SCRIPTS.find(([text]) => text === js);
+          const cachedScript = USE_CACHE.scripts && SCRIPTS.find(([text]) => text === js);
           if (!cachedScript) {
             script = createEl('script');
             script.innerHTML = js;
-            SCRIPTS.push([js, script]);
+            USE_CACHE.scripts && SCRIPTS.push([js, script]);
           } else {
             script = cachedScript[1];
+          }
+
+          let tempHandler = window.onerror;
+          if (typeof Boldom.errorHandler === 'function') {
+            Boldom.errorHandler();
+            window.onerror = Boldom.errorHandler;
           }
 
           Object.assign(link, { script });
           document.body.appendChild(script);
           hasScript = true;
+
+          if (typeof Boldom.errorHandler === 'function') {
+            window.onerror = tempHandler;
+          }
         }
 
         Object.assign(link, combined);
@@ -70,7 +84,15 @@
   function render(link) {
     if (!link.isConnected) return;
 
-    const newHtml = new Function(`return \`${link.html}\``)();
+    let newHtml;
+    try {
+      newHtml = new Function(`return \`${link.html}\``)();
+    }
+    catch (err) {
+      if (typeof Boldom.errorHandler === 'function') {
+        Boldom.errorHandler(err);
+      }
+    }
 
     if (newHtml !== link.tempHtml) {
       if (link.anchor) {
@@ -124,6 +146,10 @@
 
   const Boldom = {
     action: () => LINKS.forEach(render),
+    preload: (name, content) => PAGES[name] = content,
+    enableCache: (name) => USE_CACHE[name] = true,
+    disableCache: (name) => USE_CACHE[name] = false,
+    errorHandler: null,
     scan,
     render,
     load,
