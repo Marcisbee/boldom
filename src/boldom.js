@@ -6,6 +6,7 @@
     links: true,
   };
   let LINKS = [];
+  let AWAIT = [];
 
   function createEl(name) {
     return document.createElement(name);
@@ -30,6 +31,11 @@
   function scan() {
     LINKS = LINKS.filter((node) => node.isConnected);
 
+    if (typeof Boldom.errorHandler === 'function') {
+      Boldom.errorHandler();
+      window.onerror = Boldom.errorHandler;
+    }
+
     const links = Array.prototype.slice.call(
       document.body.querySelectorAll('link[href]')
     ).filter((link) => !link.tagged)
@@ -46,37 +52,32 @@
           combined.html = `${combined.html}<style scoped>${css}</style>`;
         }
 
+        Object.assign(link, combined);
+        LINKS.push(link);
+
         // Handle <script>
+        let awaitNumber = -1;
         if (js) {
+          awaitNumber = AWAIT.push(link) - 1;
           let script;
           const cachedScript = USE_CACHE.scripts && SCRIPTS.find(([text]) => text === js);
           if (!cachedScript) {
             script = createEl('script');
-            script.innerHTML = js;
+            script.type = 'module';
+            script.innerHTML = `${js}; Boldom.register(${awaitNumber}, function () { return \`${combined.html}\` })`;
             USE_CACHE.scripts && SCRIPTS.push([js, script]);
           } else {
             script = cachedScript[1];
           }
 
-          let tempHandler = window.onerror;
-          if (typeof Boldom.errorHandler === 'function') {
-            Boldom.errorHandler();
-            window.onerror = Boldom.errorHandler;
-          }
-
           Object.assign(link, { script });
           document.body.appendChild(script);
           hasScript = true;
-
-          if (typeof Boldom.errorHandler === 'function') {
-            window.onerror = tempHandler;
-          }
         }
 
-        Object.assign(link, combined);
-        LINKS.push(link);
-
-        render(link);
+        if (awaitNumber < 0) {
+          render(link);
+        }
       });
     });
   }
@@ -86,7 +87,7 @@
 
     let newHtml;
     try {
-      newHtml = new Function(`return \`${link.html}\``)();
+      newHtml = link.renderer();
     }
     catch (err) {
       if (typeof Boldom.errorHandler === 'function') {
@@ -119,8 +120,8 @@
   }
 
   function addAction(source, regex, added = '}') {
-    return source.replace(regex, function (match) {
-      return match.substr(0, match.length - 1) + ';Boldom.action();' + added;
+    return source.replace(regex, function (match, name) {
+      return 'window.' + name + ' = ' + match.substr(0, match.length - 1) + ';Boldom.action();' + added;
     });
   }
 
@@ -149,6 +150,10 @@
     preload: (name, content) => PAGES[name] = content,
     enableCache: (name) => USE_CACHE[name] = true,
     disableCache: (name) => USE_CACHE[name] = false,
+    register: (id, template) => {
+      AWAIT[id].renderer = template;
+      render(AWAIT[id]);
+    },
     errorHandler: null,
     scan,
     render,

@@ -46,7 +46,7 @@ So what does Boldom component looks like? It's just an html file, stripped down 
 
 **counter.html**
 ```html
-<script>
+<script>  // This script tag is `type="module"` so imports are supported here
   var count = 0;
 
   function increment() {
@@ -89,7 +89,7 @@ That's all there is to it.
 ## Caveats
 
 - Using `style-scoped` it's not possible to use `:root` css for css variables.
-- `type="module"` cannot be used in `script` tag as it breaks scope.
+- Functions used in `<script>` tag should be defined before being used.
 - Should not be used for intensive animations, cause it uses `innerHTML`.
 - Props cannot be passed to component.
 
