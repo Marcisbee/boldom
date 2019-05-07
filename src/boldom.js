@@ -1,8 +1,6 @@
 (function () {
   const PAGES = {};
-  const SCRIPTS = [];
   const USE_CACHE = {
-    scripts: true,
     links: true,
   };
   let LINKS = [];
@@ -57,29 +55,84 @@
 
         // Handle <script>
         let awaitNumber = -1;
+        let script;
         if (js) {
           awaitNumber = AWAIT.push(link) - 1;
-          let script;
-          const cachedScript = USE_CACHE.scripts && SCRIPTS.find(([text]) => text === js);
-          if (!cachedScript) {
-            script = createEl('script');
-            script.type = 'module';
-            script.innerHTML = `${js}; Boldom.register(${awaitNumber}, function () { return \`${combined.html}\` })`;
-            USE_CACHE.scripts && SCRIPTS.push([js, script]);
-          } else {
-            script = cachedScript[1];
-          }
+          script = createEl('script');
+          script.type = 'module';
+          script.innerHTML = `${js}; Boldom.register(${awaitNumber}, function () { return \`${combined.html}\` })`;
 
           Object.assign(link, { script });
           document.body.appendChild(script);
           hasScript = true;
         }
 
-        if (awaitNumber < 0) {
+        if (!script) {
+          link.renderer = new Function(`return \`${combined.html}\``);
           render(link);
         }
       });
     });
+  }
+
+  function patch(from, to, parent) {
+    const max = Math.max(from.length, to.length);
+
+    for (let ii = 0; ii < max; ii++) {
+      if (typeof from[ii] === 'undefined') {
+        // Add node
+        parent.appendChild(to[ii]);
+        continue;
+      }
+
+      if (typeof to[ii] === 'undefined') {
+        // Remove node
+        parent.removeChild(from[ii]);
+        continue;
+      }
+
+      if (!from[ii].isEqualNode(to[ii])) {
+        // Modify node
+        if (from[ii].nodeType !== to[ii].nodeType || from[ii].nodeName !== to[ii].nodeName) {
+          parent.replaceChild(to[ii], from[ii]);
+          continue;
+        }
+
+        if (from[ii].nodeType === 3) {
+          from[ii].nodeValue = to[ii].nodeValue;
+          continue;
+        }
+
+        const fromAttr = Object.values(from[ii].attributes).map((e) => e.name);
+        const toAttr = Object.values(to[ii].attributes).map((e) => e.name);
+        const combined = toAttr.reduce((acc, key) => {
+          if (acc.indexOf(key) >= 0) return acc;
+          return acc.concat(key);
+        }, fromAttr.slice());
+        for (let nn = 0; nn < combined.length; nn++) {
+          const key = combined[nn];
+          if (!from[ii].hasAttribute(key)) {
+            // Add attr
+            from[ii].setAttribute(key, to[ii].getAttribute(key));
+            continue;
+          }
+
+          if (!to[ii].hasAttribute(key)) {
+            // Remove attr
+            from[ii].removeAttribute(key);
+            continue;
+          }
+        }
+
+        if (from[ii].childNodes.length > 0 || to[ii].childNodes.length > 0) {
+          patch(
+            Array.prototype.slice.call(from[ii].childNodes),
+            Array.prototype.slice.call(to[ii].childNodes),
+            from[ii]
+          );
+        }
+      }
+    }
   }
 
   function render(link) {
@@ -96,24 +149,19 @@
     }
 
     if (newHtml !== link.tempHtml) {
-      if (link.anchor) {
-        link.anchor.parentNode.removeChild(link.anchor);
-        link.anchor = null;
-      }
-
+      link.tempHtml = newHtml;
       if (!link.anchor) {
         link.anchor = createEl('component');
         link.parentNode.insertBefore(link.anchor, link.nextSibling);
       }
 
-      // @TODO: Create diffing for dom
-      // var parser = new DOMParser();
-      // var doc = parser.parseFromString(newHtml, 'text/html');
-
-      // Array.prototype.slice.call(doc.body.childNodes)
-      //   .forEach((node) => link.anchor.append(node));
-
-      link.anchor.innerHTML = newHtml;
+      patch(
+        Array.prototype.slice.call(link.anchor.childNodes),
+        Array.prototype.slice.call(
+          new DOMParser().parseFromString(newHtml, 'text/html').body.childNodes
+        ),
+        link.anchor
+      );
 
       scan();
     }

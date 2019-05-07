@@ -1,6 +1,6 @@
 {
   "name": "boldom",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Scoped html lib (Bold idea)",
   "main": "src/boldom.js",
   "scripts": {
