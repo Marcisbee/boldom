@@ -1,12 +1,13 @@
 {
   "name": "boldom",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Scoped html lib (Bold idea)",
   "main": "src/boldom.js",
   "scripts": {
     "examples:conditional": "cd ./examples/conditional && node index.js",
     "examples:counter": "cd ./examples/counter && node index.js",
-    "examples:color": "cd ./examples/color && node index.js"
+    "examples:color": "cd ./examples/color && node index.js",
+    "examples:sinvawe": "cd ./examples/sinvawe && node index.js"
   },
   "repository": {
     "type": "git",

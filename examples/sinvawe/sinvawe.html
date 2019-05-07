@@ -1,0 +1,41 @@
+<script>
+  var barWidth = 1;
+  var barCount = 100;
+  var active = true;
+  var count = 0;
+  var step = 0.5;
+  var translateY = 0;
+  var rotation = 0;
+  var bars = [];
+
+  function getColors() {
+    var arr = [];
+    for (var i = 0; i < barCount; i++) {
+      var hue = (360 / barCount * i - count) % 360;
+      arr.push({
+        id: i,
+        color: 'hsl(' + hue + ',95%,55%)',
+        translateY: Math.sin(count / 10 + i / 5) * 100 * .5,
+        rotation: (count + i) % 360,
+      });
+    }
+    return arr;
+  }
+
+  function nextFrame() {
+    // if (active) {
+      count = count + step;
+      bars = getColors();
+
+      window.requestAnimationFrame(() => nextFrame());
+    // }
+  }
+
+  nextFrame();
+</script>
+
+<div class="animated-sin-wave">
+  ${bars.map((bar, i) => `
+    <div class="bar" data="${bar.translateY}" style="width: ${barWidth}%; left: ${barWidth * i}%; transform: scale(0.8,.5) translateY(${bar.translateY}%) rotate(${bar.rotation}deg); background-color: ${bar.color};"></div>
+  `).join('')}
+</div>

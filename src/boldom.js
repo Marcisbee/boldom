@@ -109,19 +109,18 @@
           if (acc.indexOf(key) >= 0) return acc;
           return acc.concat(key);
         }, fromAttr.slice());
+
         for (let nn = 0; nn < combined.length; nn++) {
           const key = combined[nn];
-          if (!from[ii].hasAttribute(key)) {
-            // Add attr
-            from[ii].setAttribute(key, to[ii].getAttribute(key));
-            continue;
-          }
-
           if (!to[ii].hasAttribute(key)) {
             // Remove attr
             from[ii].removeAttribute(key);
             continue;
           }
+
+          // Add attr
+          from[ii].setAttribute(key, to[ii].getAttribute(key));
+          continue;
         }
 
         if (from[ii].childNodes.length > 0 || to[ii].childNodes.length > 0) {
