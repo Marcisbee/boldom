@@ -1,7 +1,7 @@
 <script>
   var barWidth = 1;
   var barCount = 100;
-  var active = true;
+  var active = false;
   var count = 0;
   var step = 0.5;
   var translateY = 0;
@@ -23,19 +23,31 @@
   }
 
   function nextFrame() {
-    // if (active) {
+    if (active) {
       count = count + step;
       bars = getColors();
 
       window.requestAnimationFrame(() => nextFrame());
-    // }
+    }
   }
 
-  nextFrame();
+  function start() {
+    active = true;
+    nextFrame();
+  }
+
+  function stop() {
+    active = false;
+  }
+
+  export {start, stop};
 </script>
 
 <div class="animated-sin-wave">
   ${bars.map((bar, i) => `
-    <div class="bar" data="${bar.translateY}" style="width: ${barWidth}%; left: ${barWidth * i}%; transform: scale(0.8,.5) translateY(${bar.translateY}%) rotate(${bar.rotation}deg); background-color: ${bar.color};"></div>
+    <div class="bar" style="width: ${barWidth}%; left: ${barWidth * i}%; transform: scale(0.8,.5) translateY(${bar.translateY}%) rotate(${bar.rotation}deg); background-color: ${bar.color};"></div>
   `).join('')}
 </div>
+
+<button onclick="start()">start</button>
+<button onclick="stop()">stop</button>

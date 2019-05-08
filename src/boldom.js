@@ -60,7 +60,7 @@
           awaitNumber = AWAIT.push(link) - 1;
           script = createEl('script');
           script.type = 'module';
-          script.innerHTML = `${js}; Boldom.register(${awaitNumber}, function () { return \`${combined.html}\` })`;
+          script.innerHTML = `const store = Boldom.store; ${js}; Boldom.register(${awaitNumber}, function () { return \`${combined.html}\` })`;
 
           Object.assign(link, { script });
           document.body.appendChild(script);
@@ -94,6 +94,11 @@
       if (!from[ii].isEqualNode(to[ii])) {
         // Modify node
         if (from[ii].nodeType !== to[ii].nodeType || from[ii].nodeName !== to[ii].nodeName) {
+          parent.replaceChild(to[ii], from[ii]);
+          continue;
+        }
+
+        if (from[ii].nodeName === to[ii].nodeName && from[ii].nodeName === 'LINK' && from[ii].href !== to[ii].href) {
           parent.replaceChild(to[ii], from[ii]);
           continue;
         }
@@ -167,8 +172,8 @@
   }
 
   function addAction(source, regex, added = '}') {
-    return source.replace(regex, function (match, name) {
-      return 'window.' + name + ' = ' + match.substr(0, match.length - 1) + ';Boldom.action();' + added;
+    return source.replace(regex, function (match) {
+      return match.substr(0, match.length - 1) + ';Boldom.action();' + added;
     });
   }
 
@@ -187,12 +192,23 @@
       })
       .trim();
 
-    js = addAction(js, /function\s*([A-z0-9]+)?\s*\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)\s*\{(?:[^}{]+|\{(?:[^}{]+|\{[^}{]*\})*\})*\}/gi);
+    js = js.replace(/export\s+(let|var|const|function|class)\s+(\w+)/gi, (match, type, name) => {
+      if (!name) return match;
+      if (type === 'function') return `window.${name} = ${type} ${name}`;
+      return `window.${name}`;
+    });
+    // Should allow this type of expression `export = { count, increment };` ?
+    js = js.replace(/export\s+{([\w\s,]*[^\}])\s*}[;]{0,1}/gi, (_, data) => {
+      const vars = data.match(/\w+/g) || [];
+      return vars.map((key) => `window.${key} = ${key};`).join('');
+    });
+    js = addAction(js, /function\s*(\w+\s*){0,1}\((?:[^)(]+|\((?:[^)(]+|\([^)(]*\))*\))*\)\s*\{(?:[^}{]+|\{(?:[^}{]+|\{[^}{]*\})*\})*\}/gi);
 
     return { css, html, js };
   }
 
   const Boldom = {
+    store: {},
     action: () => LINKS.forEach(render),
     preload: (name, content) => PAGES[name] = content,
     enableCache: (name) => USE_CACHE[name] = true,

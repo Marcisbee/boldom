@@ -32,6 +32,17 @@
       margin-bottom: -140px;
     }
 
+    nav {
+      float: right;
+    }
+
+    nav a {
+      display: inline-block;
+      padding: 6px 14px;
+      font-size: 18px;
+      color: #1d1d1d !important;
+    }
+
     #logo {
       display: block;
       margin-bottom: 3.5rem;
@@ -50,7 +61,7 @@
       text-align: center;
       opacity: 0.6;
       padding: 30px 0;
-      background-color: #f0f0f0;
+      border-top: 2px solid #f0f0f0;
     }
 
     footer p {
@@ -61,6 +72,11 @@
 <body>
   <header>
     <div class="container">
+      <nav>
+        <a href="/">Home</a>
+        <a href="/examples/index.html">Examples</a>
+        <a href="https://github.com/Marcisbee/boldom" target="blank">Docs</a>
+      </nav>
       <img id="logo" src="logo.png" alt="Boldom" />
       <div class="hero">
         <h1>Plain HTML/JS 1kb framework</h1>
@@ -88,6 +104,10 @@
       the platform (tools we are provided already, like plain old HTML for example).</p>
       
       <p>So what does Boldom component looks like? It's just an html file, stripped down a bit.</p>
+    </div>
+
+    <div class="block" style="text-align: center;">
+      <a href="/examples/index.html" class="btn btn-primary">See examples</a>
     </div>
   </div>
 
