@@ -42,11 +42,142 @@ Every evergreen browser and older ones that support [ES6 Template Literals](http
 
 Here we don't make use Compilers, Bundles, Virtual dom, Hyperscript, State management or any other fancy stuff. We use the platform (tools we are provided already, like plain old HTML for example).
 
+## State
+
+State in Boldom is split into 3 different approaches: Local state, Global state and Store.
+
+#### Local state
+
+It is just a variable that can be changed, so this should be `var` or `let`.
+
+```html
+<script>
+  var count = 21;
+</script>
+
+<h1>${count}</h1>
+```
+
+Remember that calling `count` variable in html event attributes will not work as `count` is not defined globally. Instead use template variable (`${variable}`).
+
+```diff
+<button
+-   onclick="alert(count)">
++   onclick="alert(${count})">
+  Get count
+</button>
+```
+
+#### Global state
+
+It is also just a variable that can be changed, but it should also be rewritable so we should use `var` when creating global variables.
+
+```html
+<script>
+  export var count = 21;
+</script>
+```
+
+But in this case where `count` variable is exported to global scope, we can use it like so.
+
+```html
+<button onclick="alert(count)">
+  Get count
+</button>
+```
+
+There's no real functional difference between the approaches. Only that in exported case `count` variable is accessible in `window` scope and can be overwritten by other value with the same name.
+
+#### Store
+
+This is state manager that syncs state across multiple components. If one component changes variable, then all components using store are updated.
+
+```html
+<script>
+  store.name = 'John Doe';
+</script>
+
+<h1>${store.name}</h1>
+```
+
+Store value can be changed as regular variable with basic assignment operator (=).
+
+## Functions
+
+Same export logic applies for functions. Exported functions are accessable from global scope. That is why we can use them.
+
+```html
+<script>
+  var count = 0;
+  export function increment() {
+    count += 1;
+  }
+</script>
+
+<h1>${count}</h1>
+<button onclick="increment()">+</button>
+```
+
+## Style
+
+Styles should work as usual.
+
+```html
+<style>
+  h1 {
+    color: red;
+  }
+</style>
+
+<h1>Hello World</h1>
+```
+
+But we can also do interesting stuff like changing style using variables. If variable changes, style gets updated too.
+
+```html
+<script>
+  var index = 0;
+  var colors = ['red', 'green', 'blue'];
+
+  setInterval(function () {
+    index = (index + 1) % colors.length;
+  }, 1000);
+</script>
+
+<style>
+  h1 {
+    color: ${colors[index]};
+  }
+</style>
+
+<h1>Hello World</h1>
+```
+
+Now in this example, every second h1 will change it's colors.
+
+## Events
+
+Events can be triggered on html tags.
+
+We can also get event object using `event` variable.
+
+```html
+<button onclick="console.log(event)">Get event</button>
+```
+
+Same applies for current `button` element node in this example by using `this` variable.
+
+```html
+<button onclick="console.log(this)">Get this reference</button>
+```
+
+## Example
+
 So what does Boldom component looks like? It's just an html file, stripped down a bit.
 
 **counter.html**
 ```html
-<script>  // This script tag is `type="module"` so imports are supported here
+<script>
   var count = 0;
 
   function increment() {
@@ -70,10 +201,6 @@ So what does Boldom component looks like? It's just an html file, stripped down 
 <button onclick="increment()">+</button>
 ```
 
-This is what counter component looks like. Think of it as a HTML parsed as [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals) (that `${count ...}` syntax for using JS in your HTML) and injected directly into dom... well that's exactly what it is.
-
-One thing might not be clear is how view gets updated here. You see boldom makes use of `window` scope. Every variable defined in `script` tag is added to window scope by default (browser it self does it). That is how we can access variables and functions in HTML (no `this`, `self` etc.). Only thing done by Boldom is that in every function defined in components root scope, it injects another function call that updates view. And that's the whole framework idea right there.
-
 Ok so we've seen how component looks, but how the hell we can use it ? We just need to inject that component in dom using `link` (it must be defined inside `body`):
 
 ```html
@@ -84,14 +211,62 @@ Ok so we've seen how component looks, but how the hell we can use it ? We just n
 
 See [examples section](/examples) for more demos.
 
+
+## Architecture
+
+This is framework taks advantage of global scope and default html functionality. For example html has option to already trigger javascript code from props like `onclick` for example this works if you try this in html.
+
+```html
+<image src="hello.png" onclick="alert('Hi')"/>
+```
+
+But for it to work, we need functions to be global scope. So we export them to global scope using es6 `export` syntax.
+
+```js
+export function sayHi() {
+  console.log('hi');
+}
+```
+
+becomes:
+
+```js
+window.sayHi = function sayHi() {
+  console.log('hi');
+}
+```
+
+Same happens with all exported variables, not just functions.
+
+So now that there is `increment` variable on global scope, we can do this in html:
+
+```html
+<button onclick="sayHi()">Say hi</button>
+```
+
+Now that we know why we're making use of global scope, let me quickly show what happens in template engine.
+
+For a while now we have this thing called [Template literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Template_literals). That basically allows us to write multi line strings and use variables inside it like so:
+
+```js
+const count = 2;
+const template = `
+  <h1>${count}</h1>
+`;
+```
+
+That is basically what happens when boldom is parsing imported html files, that is why we can use that syntax.
+
+And what about updates?
+Good question.
+We inject `Boldom.action()` in every function found in components `script` tag. So whenever any function is called in component it triggers update. And it's just simple and small dom patch algo that applies new dom tree to old one (So that buttons/inputs etc. don't lose focus and state and is a bit more faster than innerHTML).
+
 That's all there is to it.
 
 ## Caveats
 
-- Using `style-scoped` it's not possible to use `:root` css for css variables.
-- Functions used in `<script>` tag should be defined before being used.
-- Should not be used for intensive animations, cause it uses `innerHTML`.
-- Props cannot be passed to component.
+- Exported variables and functions used in `<script>` tag should be defined before being used.
+- Props cannot be passed to component (yet).
 
 
 ## Stay In Touch
