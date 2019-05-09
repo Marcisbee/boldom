@@ -180,11 +180,11 @@ So what does Boldom component looks like? It's just an html file, stripped down 
 <script>
   var count = 0;
 
-  function increment() {
+  export function increment() {
     count += 1;
   }
 
-  function decrement() {
+  export function decrement() {
     count -= 1;
   }
 </script>
