@@ -10,7 +10,7 @@ action "Install" {
 
 # Filter for a new tag
 action "Tag" {
-  needs = ["Install"]
+  needs = "Install"
   uses = "actions/bin/filter@master"
   args = "tag"
 }
