@@ -3,6 +3,7 @@ workflow "Install and Publish" {
   resolves = ["Publish"]
 }
 
+# Install dependencies
 action "Install" {
   uses = "actions/npm@master"
   args = "install"
