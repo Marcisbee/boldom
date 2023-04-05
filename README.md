@@ -9,7 +9,7 @@ This framework is based on Template Literals, global scope (yes! You heard me, t
 Also should mention that this is a runtime framework, no compilation or build process needed.
 
 [![npm version](https://img.shields.io/npm/v/boldom.svg?style=flat-square)](https://www.npmjs.com/package/boldom)
-[![boldom workspace on slack](https://img.shields.io/badge/slack-boldom-3eb891.svg?style=flat-square)](https://join.slack.com/t/radijs/shared_invite/enQtMjk3NTE2NjYxMTI2LWFmMTM5NTgwZDI5NmFlYzMzYmMxZjBhMGY0MGM2MzY5NmExY2Y0ODBjNDNmYjYxZWYxMjEyNjJhNjA5OTJjNzQ)
+[![discord](https://dcbadge.vercel.app/api/server/a62gfaDW2e?style=flat-square)](https://discord.gg/a62gfaDW2e)
 
 
 ## Installation
